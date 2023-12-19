@@ -1,0 +1,8 @@
+---
+title: Get Steps for a Task
+---
+sequenceDiagram
+    Client->>Server: GET /task/:id
+    Server->>DB: SELECT * FROM steps WHERE task = :id
+    DB->>Server: [Rows]
+    Server->>Client: {JSON}

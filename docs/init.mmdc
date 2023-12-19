@@ -1,3 +1,6 @@
+---
+title: Load Application
+---
 sequenceDiagram
     Client->>Server: GET /index.html
     Server->>Client: HTML
