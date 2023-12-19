@@ -12,7 +12,7 @@ const client = await pool.connect();
 
 const app = express();
 
-app.use(express.static('public'));
+app.use(express.static('./public/dist'));
 app.use((req, res, next) => {
     console.info(`Incoming Request: ${req.method} ${req.url}`);
     next();

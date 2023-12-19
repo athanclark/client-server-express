@@ -1,5 +1,9 @@
 # Client / Server - express.js
 
+## Building
+
+### Database
+
 To start the database, you can use [docker compose](https://docs.docker.com/compose/):
 
 ```bash
@@ -8,16 +12,26 @@ docker compose up
 
 ... optionally starting the database as a [daemon](https://en.wikipedia.org/wiki/Daemon_(computing)):
 
-
 ```bash
 docker compose up -d
 ```
 
-Then, you can get node running:
+### NPM Dependencies
 
 ```bash
 npm ci
-node app.js
+```
+
+### Client
+
+You'll have to build the client before you run the server:
+
+### Server
+
+You can get the node running after the sources are built:
+
+```bash
+npm start
 ```
 
 ## Documentation
