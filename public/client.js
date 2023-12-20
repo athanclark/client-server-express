@@ -40,16 +40,17 @@ function initialize() {
     });
 }
 
-function addStep() {
+function addStep(step = {}) {
     const steps_length = $('#new-task tbody').children().length;
     function makeDeleteButton(idx) {
         return $('<button></button>').text('Delete').on('click', e => {
             e.preventDefault();
-            $('#new-task tbody').children().eq(steps_length).remove();
+            $('#new-task tbody').children().eq(idx).remove();
             // if this was the second to last step, remove the button from the last
             if ($('#new-task tbody').children().length === 1) {
                 $('#new-task tbody > tr > td:last-child > button').remove();
             }
+            // TODO call DELETE /steps/step.id
         });
     }
     // includes delete button in first element as there is more than 1 step
@@ -60,15 +61,18 @@ function addStep() {
     }
     // adds step input fields
     $('#new-task tbody').append(
-        $('<tr></tr>').append([
+        $('<tr></tr>').data('id', step.id || '').append([
             $('<td></td>').append(
-                $('<input></input>').attr('type','text')
+                $('<input></input>').attr('type','text').val(step.title || '')
             ),
             $('<td></td>').append(
-                $('<textarea></textarea>')
+                $('<textarea></textarea>').val(step.description || '')
             ),
             $('<td></td>').append(
-                $('<input></input>').attr('type','checkbox').attr('role','switch')
+                $('<input></input>')
+                    .attr('type','checkbox')
+                    .attr('role','switch')
+                    .prop('checked', step.completed || false)
             ),
             $('<td></td>').append(
                 steps_length >= 1 ? [makeDeleteButton(steps_length)] : []
@@ -83,10 +87,13 @@ function selectTask(id) {
     $('#task-action').text('Edit Task');
     $('#delete').removeClass('hidden');
     $('#cancel').removeClass('hidden');
-    $.get(`/tasks/${id}`, ({title, description}) => {
+    $.get(`/tasks/${id}`, ({title, description, steps}) => {
         $('#new-task > label > input[type="text"]').val(title);
         $('#new-task > label > textarea').val(description);
-        // TODO include steps
+        $('#new-task > table > tbody').empty();
+        for (const step of steps) {
+            addStep(step);
+        }
     });
 }
 

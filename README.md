@@ -92,16 +92,16 @@ sequenceDiagram
     Server->>Client: [{title, description, id}]
 ```
 
-#### Getting the steps of a specific task
+#### Getting a specific task
 
 ```mermaid
 ---
-title: Get Steps for a Task
+title: Get a Task
 ---
 sequenceDiagram
     Client->>Server: GET /task/:id
-    Server->>DB: SELECT first_step FROM tasks WHERE id = :id
-    DB->>Server: first_step id
+    Server->>DB: SELECT * FROM tasks WHERE id = :id
+    DB->>Server: {title, desc, first_step}
     loop Every Step
       Server->>DB: SELECT * FROM steps WHERE id = first_step
       DB->>Server: row
@@ -112,7 +112,7 @@ sequenceDiagram
       Server->>DB: SELECT * FROM steps WHERE id = row.next_step
       DB->>Server: row (next_step == NULL)
     end
-    Server->>Client: [{title, description, id, completed}]
+    Server->>Client: {title, desc, steps: [...]}
 ```
 
 #### Adding a new task
@@ -122,7 +122,7 @@ sequenceDiagram
 title: Add a new task
 ---
 sequenceDiagram
-    Client->>Server: POST /steps [{title, desc}, {title, desc}, ...]
+    Client->>Server: POST /tasks {title, desc, steps}
     loop Every Step in Reverse
       Server->>DB: INSERT INTO steps (title, description) VALUES (..., ...) RETURNING id -- last step
       DB->>Server: id
@@ -133,9 +133,26 @@ sequenceDiagram
       Server->>DB: INSERT INTO steps (next_step, title, description) VALUES (..., ..., ...) RETURNING id -- first step
       DB->>Server: id
     end
-    Server->>Client: first_step id
-    Client->>Server: POST /tasks {title, desc, first_step}
     Server->>DB: INSERT INTO tasks (title, description, first_step) VALUES (..., ..., ...) RETURNING id
     DB->>Server: id
     Server->>Client: task id
+```
+
+
+#### Updating a task
+
+```mermaid
+---
+title: Update a task
+---
+sequenceDiagram
+    Client->>Server: PATCH /tasks {id, title, desc, steps}
+    loop Every Step in Reverse
+      Server->>DB: UPDATE steps SET title = ..., description = ... WHERE id = ... -- last step
+      Server->>DB: UPDATE steps SET next_step = ...prev id..., title = ..., description = ... WHERE id = ... -- 2nd to last step
+      Server-->>DB: ...
+      Server->>DB: UPDATE steps SET next_step = ...prev id..., title = ..., description = ... WHERE id = ... -- first step
+    end
+    Server->>DB: UPDATE tasks title = ..., description = ..., first_step = ... WHERE id = ...
+    Server->>Client: {id, title, desc, steps}
 ```

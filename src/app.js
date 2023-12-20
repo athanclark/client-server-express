@@ -30,8 +30,20 @@ app.get('/tasks', async (req, res) => {
 app.get('/tasks/:id', async (req, res, next) => {
     try {
         const result = await psql.query('SELECT * FROM tasks WHERE id = $1', [req.params.id]);
+        let steps = [];
         if (result.rows.length === 1) {
-            res.json(result.rows[0]);
+            let task = result.rows[0];
+            let next_step = task.first_step;
+            while (next_step !== null) {
+                const step_result = await psql.query('SELECT * FROM steps WHERE id = $1', [next_step]);
+                if (step_result.rows.length !== 1) {
+                    throw new Error('Foreign key broken', step_result);
+                }
+                const step = step_result.rows[0];
+                next_step = step.next_step;
+                steps.push(step);
+            }
+            res.json({...task, steps});
         } else {
             next();
         }
