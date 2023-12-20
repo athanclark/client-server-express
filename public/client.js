@@ -15,26 +15,26 @@ $(document).ready(() => {
     initialize();
 });
 
+function makeTaskRow({title, description, id}) {
+    return $('<tr></tr>').data('id', id).append([
+        $('<td></td>').append(
+            $('<a></a>')
+                .attr('role', 'button')
+                .attr('href', '#')
+                .text(title)
+                .on('click', e => {
+                    e.preventDefault();
+                    selectTask(id);
+                })
+        ),
+        $('<td></td>').append(description || ""),
+    ]);
+}
 
 // gets initial data
 function initialize() {
     $.get('/tasks', data => {
-        let rows = data.map(({title, description, id}) => {
-            console.log('row', title, description, id);
-            return $('<tr></tr>').append([
-                $('<td></td>').append(
-                    $('<a></a>')
-                        .attr('role', 'button')
-                        .attr('href', '#')
-                        .text(title)
-                        .on('click', e => {
-                            e.preventDefault();
-                            selectTask(id);
-                    })
-                ),
-                $('<td></td>').append(description || ""),
-            ]);
-        });
+        let rows = data.map(makeTaskRow);
         console.log('initial data', data, 'rows', rows);
         $('#tasks > tbody').empty().append(rows);
     });
@@ -68,7 +68,10 @@ function addStep() {
                 $('<textarea></textarea>')
             ),
             $('<td></td>').append(
-                makeDeleteButton(steps_length)
+                $('<input></input>').attr('type','checkbox').attr('role','switch')
+            ),
+            $('<td></td>').append(
+                steps_length >= 1 ? [makeDeleteButton(steps_length)] : []
             )
         ])
     );
@@ -104,8 +107,20 @@ function saveTask() {
         steps.push({title, description, completed});
     });
     const task = {title, description, steps};
+
     if (id) {
-        
+        $.ajax({
+            url: `/tasks/${id}`,
+            type: 'UPDATE',
+            data: JSON.stringify(task),
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json',
+            success: () => {
+                let newRow = makeTaskRow({title, description, id});
+                $(`#tasks > tbody > tr[data-id=${id}]`).replaceWith(newRow);
+                clearTaskForm();
+            }
+        });
     } else {
         $.ajax({
             url: '/tasks',
@@ -113,9 +128,19 @@ function saveTask() {
             data: JSON.stringify(task),
             contentType: 'application/json; charset=utf-8',
             dataType: 'json',
-            success: response => {
-                console.log('response from post', response);
+            success: id => {
+                let newRow = makeTaskRow({title, description, id});
+                $('#tasks > tbody').append(newRow);
+                clearTaskForm();
             }
         });
     }
+}
+
+function clearTaskForm() {
+    $('#task-id').removeAttr('value');
+    $('#new-task > label > input[type="text"]').val('');
+    $('#new-task > label > textarea').val('');
+    $('#new-task > table > tbody').empty();
+    addStep();
 }
