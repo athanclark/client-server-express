@@ -1,1 +1,13 @@
+
 @import "@picocss/pico/scss/pico";
+
+:root {
+    --contrast: #f00 !important;
+    --contrast-hover: #f44 !important;
+    --contrast-inverse: #fff !important;
+}
+
+button.hidden {
+    display: none;
+}
+

@@ -5,9 +5,6 @@ $(document).ready(() => {
         e.preventDefault();
         saveTask();
     });
-    // $('#new-task tbody button').on('click', e => {
-    //     e.preventDefault();
-    // })
     $('#add-step').on('click', e => {
         e.preventDefault();
         addStep();
@@ -33,9 +30,12 @@ function makeTaskRow({title, description, id}) {
 
 // gets initial data
 function initialize() {
+    $('#cancel').on('click', e => {
+        e.preventDefault();
+        clearTaskForm();
+    });
     $.get('/tasks', data => {
         let rows = data.map(makeTaskRow);
-        console.log('initial data', data, 'rows', rows);
         $('#tasks > tbody').empty().append(rows);
     });
 }
@@ -78,7 +78,16 @@ function addStep() {
 }
 
 function selectTask(id) {
-    
+    clearTaskForm();
+    $('#task-id').val(id);
+    $('#task-action').text('Edit Task');
+    $('#delete').removeClass('hidden');
+    $('#cancel').removeClass('hidden');
+    $.get(`/tasks/${id}`, ({title, description}) => {
+        $('#new-task > label > input[type="text"]').val(title);
+        $('#new-task > label > textarea').val(description);
+        // TODO include steps
+    });
 }
 
 function saveTask() {
@@ -138,6 +147,9 @@ function saveTask() {
 }
 
 function clearTaskForm() {
+    $('#task-action').text('New Task');
+    $('#delete').addClass('hidden');
+    $('#cancel').addClass('hidden');
     $('#task-id').removeAttr('value');
     $('#new-task > label > input[type="text"]').val('');
     $('#new-task > label > textarea').val('');
