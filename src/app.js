@@ -8,9 +8,13 @@ const pool = new pg.Pool({
     host: 'localhost'
 });
 
-const client = await pool.connect();
+const psql = await pool.connect();
 
 const app = express();
+
+function send500(res) {
+    res.status(500).set('Content-Type', 'text/plain').send('Server Error');
+}
 
 app.use(express.static('./public/dist'));
 app.use((req, res, next) => {
@@ -19,12 +23,100 @@ app.use((req, res, next) => {
 });
 
 app.get('/tasks', async (req, res) => {
-    const result = await client.query('SELECT id, title, description FROM tasks');
+    const result = await psql.query('SELECT id, title, description FROM tasks');
     res.json(result.rows);
 });
 
-// app.use((req, res) => {
-//     res.status(404).set('Content-Type', 'text/plain').send('Not Found');
-// });
+app.get('/tasks/:id', async (req, res, next) => {
+    try {
+        const result = await psql.query('SELECT * FROM tasks WHERE id = $1', [req.params.id]);
+        if (result.rows.length === 1) {
+            res.json(result.rows[0]);
+        } else {
+            next();
+        }
+    } catch(e) {
+        console.warn('DB Error', e);
+        send500(res);
+    }
+});
+
+app.post('/steps', async (req, res) => {
+    
+});
+
+app.post('/tasks', express.json({type: '*/*'}), async (req, res) => {
+    const o = req.body;
+    if (
+        typeof o.title !== 'string'
+            || (o.description ? typeof o.description !== 'string' : false)
+            || !Array.isArray(o.steps)
+            || !o.steps.every(s =>
+                typeof s.title === 'string'
+                    && (s.description ? typeof s.description === 'string' : true)
+                    // && (s.completed ? typeof s.completed === 'boolean' : true)
+            )
+    ) {
+        console.warn('Bad Request', o);
+        res.status(400).set('Content-Type', 'text/plain').send('Bad Request');
+        return;
+    }
+    let next_step = null;
+    // Create linked list for steps
+    for (let i = o.steps.length - 1; i >= 0; i--) {
+        const step = o.steps[i];
+        try {
+            const result = await (step.description
+                ?
+                psql.query(
+                    'INSERT INTO steps (title, description, next_step) VALUES ($1, $2, $3) RETURNING id',
+                    [step.title, step.description, next_step]
+                )
+                :
+                psql.query(
+                    'INSERT INTO steps (title, next_step) VALUES ($1, $2) RETURNING id',
+                    [step.title, next_step]
+                ));
+            if (!result.rows) {
+                console.warn('Result has no rows', result);
+                throw new Error('Result has no rows');
+            }
+            if (result.rows.length !== 1) {
+                throw new Error('Non-Singular rows returned on insert', result);
+            }
+            next_step = result.rows[0].id;
+        } catch(e) {
+            console.warn('DB Error', e);
+            send500(res);
+            return;
+        }
+    }
+    // Insert task
+    try {
+        const result = await (o.description
+              ?
+              psql.query(
+                  'INSERT INTO tasks (title, description, first_step) VALUES ($1, $2::integer, $3) RETURNING id',
+                  [o.title, o.description, next_step]
+              )
+              :
+              psql.query(
+                  'INSERT INTO tasks (title, first_step) VALUES ($1, $2::integer) RETURNING id',
+                  [o.title, next_step]
+              ));
+        if (result.rows.length !== 1) {
+            throw new Error('Non-Singular rows returned on insert', result);
+        }
+        const { id } = result.rows[0];
+        res.json(id);
+    } catch(e) {
+        console.warn('DB Error', e);
+        send500(res);
+    }
+});
+
+app.use((req, res) => {
+    res.status(404).set('Content-Type', 'text/plain').send('Not Found');
+});
 
 app.listen(process.env.PORT | 8000);

@@ -7,34 +7,37 @@
     </head>
     <body>
         <main class="container">
-            <h1>New Task</h1>
-            <form id="new-task">
-                <label>
-                    Title
-                    <input type="text" />
-                </label>
-                <label>
-                    Description
-                    <textarea></textarea>
-                </label>
-                <h2>Steps</h2>
-                <a class="secondary" href="#" role="button">Add Step</a>
-                <table>
-                    <thead>
-                        <th>Title</th>
-                        <th>Description</th>
-                        <th></th>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><input type="text" /></td>
-                            <td><textarea></textarea></td>
-                            <td></td>
-                        </tr>
-                    </tbody>
-                </table>
-                <button>Save</button>
-            </form>
+            <article>
+                <h1>New Task</h1>
+                <form id="new-task">
+                    <input type="hidden" id="task-id" />
+                    <label>
+                        Title
+                        <input type="text" />
+                    </label>
+                    <label>
+                        Description
+                        <textarea></textarea>
+                    </label>
+                    <h2>Steps</h2>
+                    <a class="secondary" href="#" role="button" id="add-step">Add Step</a>
+                    <table>
+                        <thead>
+                            <th>Title</th>
+                            <th>Description</th>
+                            <th></th>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="text" /></td>
+                                <td><textarea></textarea></td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button id="save">Save</button>
+                </form>
+            </article>
             <hr />
             <h1>Task List</h1>
             <table id="tasks">

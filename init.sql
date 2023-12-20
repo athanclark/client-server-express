@@ -3,7 +3,7 @@ CREATE TABLE steps (
   title varchar(255) NOT NULL,
   description text,
   completed boolean NOT NULL DEFAULT false,
-  next_step integer REFERENCES steps(id)
+  next_step integer REFERENCES steps(id) DEFAULT NULL
 );
 
 CREATE TABLE tasks (
