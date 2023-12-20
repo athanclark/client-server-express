@@ -56,7 +56,7 @@ erDiagram
           id serial PK
           title varchar(255)
           description text
-          completed boolean FALSE
+          completed boolean "DEFAULT=FALSE"
           next_step bigint FK "Linked List"
     }
     tasks {
@@ -108,6 +108,7 @@ sequenceDiagram
       Server->>DB: SELECT * FROM steps WHERE id = row.next_step
       DB->>Server: row
       Server-->>DB: ...
+      DB-->>Server: ...
       Server->>DB: SELECT * FROM steps WHERE id = row.next_step
       DB->>Server: row (next_step == NULL)
     end
@@ -128,6 +129,7 @@ sequenceDiagram
       Server->>DB: INSERT INTO steps (next_step, title, description) VALUES (..., ..., ...) RETURNING id -- 2nd to last step
       DB->>Server: id
       Server-->>DB: ...
+      DB-->>Server: ...
       Server->>DB: INSERT INTO steps (next_step, title, description) VALUES (..., ..., ...) RETURNING id -- first step
       DB->>Server: id
     end
