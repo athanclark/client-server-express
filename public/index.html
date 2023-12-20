@@ -2,12 +2,49 @@
 <html>
     <head>
         <title>Task List</title>
-        <link rel="stylesheet" href="./styles.css" />
+        <link rel="stylesheet" href="./styles.scss" />
         <script type="module" src="./client.js"></script>
     </head>
     <body>
-        <h1>Task List</h1>
-        <table id="tasks">
-        </table>
+        <main class="container">
+            <h1>New Task</h1>
+            <form id="new-task">
+                <label>
+                    Title
+                    <input type="text" />
+                </label>
+                <label>
+                    Description
+                    <textarea></textarea>
+                </label>
+                <h2>Steps</h2>
+                <a class="secondary" role="button">Add Step</a>
+                <table>
+                    <thead>
+                        <th>Title</th>
+                        <th>Description</th>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="text" /></td>
+                            <td><textarea></textarea></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button>Save</button>
+            </form>
+            <hr />
+            <h1>Task List</h1>
+            <table id="tasks">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </main>
     </body>
 </html>

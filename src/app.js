@@ -18,6 +18,13 @@ app.use((req, res, next) => {
     next();
 });
 
-// app.get('')
+app.get('/tasks', async (req, res) => {
+    const result = await client.query('SELECT id, title, description FROM tasks');
+    res.json(result.rows);
+});
+
+// app.use((req, res) => {
+//     res.status(404).set('Content-Type', 'text/plain').send('Not Found');
+// });
 
 app.listen(process.env.PORT | 8000);

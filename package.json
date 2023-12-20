@@ -4,19 +4,34 @@
     "description": "",
     "main": "index.js",
     "type": "module",
+    "watch": {
+        "start": {
+            "patterns": [
+                "public",
+                "src"
+            ],
+            "extensions": "html,scss,js",
+            "ignore": "public/dist/",
+            "quiet": false
+        }
+    },
     "scripts": {
         "prestart": "npx vite build public/",
-        "start": "node app.js",
+        "start": "node src/app.js",
+        "watch": "npx npm-watch",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "author": "",
     "license": "ISC",
     "dependencies": {
+        "@picocss/pico": "^1.5.10",
         "express": "^4.18.2",
         "jquery": "^3.7.1",
         "pg": "^8.11.3"
     },
     "devDependencies": {
+        "npm-watch": "^0.11.0",
+        "sass": "^1.69.5",
         "vite": "^5.0.10"
     }
 }

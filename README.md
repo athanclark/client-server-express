@@ -22,20 +22,25 @@ docker compose up -d
 npm ci
 ```
 
-### Client
+### Client & Server
 
-You'll have to build the client before you run the server:
-
-### Server
-
-You can get the node running after the sources are built:
+You can get the client built and server running just with `npm start`:
 
 ```bash
 npm start
 ```
 
-## Documentation
+This will build the client with [vite](https://vitejs.dev/), which will provide lots of nice
+features like [cache busting](https://www.keycdn.com/support/what-is-cache-busting),
+"browserification" of ES6 modules, etc.
 
+You can also watch changes:
+
+```bash
+npm run watch
+```
+
+## Documentation
 
 ### Entity Relationship Diagram
 
@@ -51,7 +56,7 @@ erDiagram
           id serial PK
           title varchar(255)
           description text
-          completed boolean
+          completed boolean FALSE
           next_step bigint FK "Linked List"
     }
     tasks {
@@ -84,7 +89,7 @@ sequenceDiagram
     Client->>Server: GET /tasks
     Server->>DB: SELECT * FROM tasks
     DB->>Server: [Rows]
-    Server->>Client: {JSON}
+    Server->>Client: [{title, description, id}]
 ```
 
 #### Getting the steps of a specific task
@@ -95,7 +100,40 @@ title: Get Steps for a Task
 ---
 sequenceDiagram
     Client->>Server: GET /task/:id
-    Server->>DB: SELECT * FROM steps WHERE task = :id
-    DB->>Server: [Rows]
-    Server->>Client: {JSON}
+    Server->>DB: SELECT first_step FROM tasks WHERE id = :id
+    DB->>Server: first_step id
+    loop Every Step
+      Server->>DB: SELECT * FROM steps WHERE id = first_step
+      DB->>Server: row
+      Server->>DB: SELECT * FROM steps WHERE id = row.next_step
+      DB->>Server: row
+      Server-->>DB: ...
+      Server->>DB: SELECT * FROM steps WHERE id = row.next_step
+      DB->>Server: row (next_step == NULL)
+    end
+    Server->>Client: [{title, description, id, completed}]
+```
+
+#### Adding a new task
+
+```mermaid
+---
+title: Add a new task
+---
+sequenceDiagram
+    Client->>Server: POST /steps [{title, desc}, {title, desc}, ...]
+    loop Every Step in Reverse
+      Server->>DB: INSERT INTO steps (title, description) VALUES (..., ...) RETURNING id -- last step
+      DB->>Server: id
+      Server->>DB: INSERT INTO steps (next_step, title, description) VALUES (..., ..., ...) RETURNING id -- 2nd to last step
+      DB->>Server: id
+      Server-->>DB: ...
+      Server->>DB: INSERT INTO steps (next_step, title, description) VALUES (..., ..., ...) RETURNING id -- first step
+      DB->>Server: id
+    end
+    Server->>Client: first_step id
+    Client->>Server: POST /tasks {title, desc, first_step}
+    Server->>DB: INSERT INTO tasks (title, description, first_step) VALUES (..., ..., ...) RETURNING id
+    DB->>Server: id
+    Server->>Client: task id
 ```
