@@ -54,7 +54,7 @@ app.post('/tasks', express.json({type: '*/*'}), async (req, res) => {
             || !o.steps.every(s =>
                 typeof s.title === 'string'
                     && (s.description ? typeof s.description === 'string' : true)
-                    // && (s.completed ? typeof s.completed === 'boolean' : true)
+                    && (s.completed ? typeof s.completed === 'boolean' : true)
             )
     ) {
         console.warn('Bad Request', o);
@@ -64,19 +64,14 @@ app.post('/tasks', express.json({type: '*/*'}), async (req, res) => {
     let next_step = null;
     // Create linked list for steps
     for (let i = o.steps.length - 1; i >= 0; i--) {
-        const step = o.steps[i];
+        let {title, description, completed} = o.steps[i];
         try {
-            const result = await (step.description
-                ?
-                psql.query(
-                    'INSERT INTO steps (title, description, next_step) VALUES ($1, $2, $3) RETURNING id',
-                    [step.title, step.description, next_step]
-                )
-                :
-                psql.query(
-                    'INSERT INTO steps (title, next_step) VALUES ($1, $2) RETURNING id',
-                    [step.title, next_step]
-                ));
+            description = description || null;
+            completed = completed || false;
+            const result = await psql.query(
+                'INSERT INTO steps (title, description, completed, next_step) VALUES ($1, $2, $3, $4) RETURNING id',
+                [title, description, completed, next_step]
+            );
             if (!result.rows) {
                 console.warn('Result has no rows', result);
                 throw new Error('Result has no rows');
@@ -92,18 +87,13 @@ app.post('/tasks', express.json({type: '*/*'}), async (req, res) => {
         }
     }
     // Insert task
+    let {title, description} = o;
+    description = description || null;
     try {
-        const result = await (o.description
-              ?
-              psql.query(
-                  'INSERT INTO tasks (title, description, first_step) VALUES ($1, $2::integer, $3) RETURNING id',
-                  [o.title, o.description, next_step]
-              )
-              :
-              psql.query(
-                  'INSERT INTO tasks (title, first_step) VALUES ($1, $2::integer) RETURNING id',
-                  [o.title, next_step]
-              ));
+        const result = await psql.query(
+            'INSERT INTO tasks (title, description, first_step) VALUES ($1, $2, $3) RETURNING id',
+            [title, description, next_step]
+        );
         if (result.rows.length !== 1) {
             throw new Error('Non-Singular rows returned on insert', result);
         }

@@ -79,5 +79,43 @@ function selectTask(id) {
 }
 
 function saveTask() {
-    
+    let id = $('#task-id').val();
+    if (id === "") {
+        id = null;
+    } else {
+        id = parseInt(id);
+    }
+
+    const title = $('#new-task > label > input[type="text"]').val();
+    let description = $('#new-task > label > textarea').val();
+    if (description === "") {
+        description = null;
+    }
+
+    let steps = [];
+    $('#new-task > table > tbody').children().each((_idx, elem) => {
+        const tr = $(elem);
+        const title = tr.children().eq(0).children().eq(0).val();
+        let description = tr.children().eq(1).children().eq(0).val();
+        if (description === "") {
+            description = null;
+        }
+        const completed = tr.children().eq(2).children().eq(0).is(':checked');
+        steps.push({title, description, completed});
+    });
+    const task = {title, description, steps};
+    if (id) {
+        
+    } else {
+        $.ajax({
+            url: '/tasks',
+            type: 'POST',
+            data: JSON.stringify(task),
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json',
+            success: response => {
+                console.log('response from post', response);
+            }
+        });
+    }
 }
